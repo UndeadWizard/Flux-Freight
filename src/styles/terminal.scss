@@ -1,0 +1,294 @@
+// src/styles/terminal.scss
+
+// 1. IMPORT THE MODERN NATIVE SASS COLOR MODULE PATH
+@use "sass:color";
+
+// 🌟 THEMATIC BRAND COLOR VARIABLES
+$bg-matrix: #0c0a09;       // Deep stone onyx background
+$panel-surface: #1c1917;  // Polished obsidian window face
+$panel-border: #2e2a24;   // Antique metallic brass alloy framing
+$cell-surface: #191715;   // Vacant slot backdrop
+$cell-border: #2e2a24;    // Antique metallic brass alloy framing
+$text-primary: #e7e5e4;   // Parchment cream font overlay
+$text-mute: #78716c;      // Ink fading charcoal slate text
+$amber-glint: #f59e0b;    // Neon alchemical liquid gold accent
+$mana-leak: #c084fc;      // Pulsating ethereal violet glow
+
+// 🛡️ REUSABLE MIXINS FOR SCISSOR-SHARP SCROLLBARS
+@mixin apex-scrollbars {
+  &::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: color.adjust($bg-matrix, $lightness: -2%);
+  }
+  &::-webkit-scrollbar-thumb {
+    background: $panel-border;
+    border-radius: 2px;
+    &:hover { background: $amber-glint; }
+  }
+}
+
+// 🎛️ CORE TERMINAL MATRIX ENVIRONMENT STYLING
+.flux-terminal-environment {
+  min-height: 100vh;
+  background-color: $bg-matrix;
+  color: $text-primary;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  user-select: none;
+
+  // INTERACTIVE CONSOLE STYLES
+  .apex-console-input-bar {
+    background-color: color.adjust($bg-matrix, $lightness: 3%);
+    border: 1px solid $panel-border;
+    border-radius: 4px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
+    
+    input {
+      color: $amber-glint;
+      font-weight: 700;
+      &::placeholder { color: color.adjust($text-mute, $lightness: -20%); }
+    }
+  }
+
+  // 🛠️ HORIZONTAL LAYOUT WORKSPACE DECK ROW WRAPPER
+  .apex-split-workspace-deck {
+    display: flex !important;
+    flex-direction: row !important; // Forces sidebar left, canvas right
+    gap: 1rem;
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+  }
+
+  // DESKTOP SYSTEM BACKGROUND GRID CANVAS (dnd-kit Context Box)
+  .grid-workspace-canvas {
+    flex: 1;
+    border: 1px solid rgba($panel-border, 0.4);
+    background-image: radial-gradient(rgba($amber-glint, 0.1) 0.5px, transparent 0.5px);
+    background-size: 16px 16px;
+    border-radius: 4px;
+    padding: 1.5rem; 
+
+  
+    .matrix-square-deck {
+      display: flex;
+      flex-wrap: wrap;       // Automatically wraps cards down to the next row when they expand out
+      gap: 1.5rem;           // Symmetrical layout spacing between slots
+      width: 100%;
+      align-items: flex-start;
+
+      // 🛠️ MODERN ADJUSTMENT: Droppable cells now act as flexible base anchors
+      .matrix-square-cell {
+        flex: 1 1 calc(33.333% - 1rem); // Defaults to a 3-column split width baseline
+        min-width: 280px;               // Prevents tiles from compressing past a readable size
+        height: auto;
+        min-height: 340px;
+        box-sizing: border-box;
+        background-color: $cell-surface;
+        border: 1px dashed $cell-border;
+        contain: layout paint; 
+        transition: border-color 0.2s ease, background-color 0.2s ease;
+
+        &.is-hovered-target {
+          border: 1px solid rgba($amber-glint, 0.6) !important;
+          background-color: rgba($amber-glint, 0.04) !important;
+          box-shadow: 0 0 20px rgba($amber-glint, 0.15), inset 0 0 15px rgba($amber-glint, 0.08) !important;
+        }
+      }
+    }
+  }
+
+    // 🌟 PERFECT SYMMETRICAL SQUARE GRID LAYOUT DECK
+    .matrix-square-deck {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr)); 
+    gap: 1.5rem;                                      
+    width: 100%;
+
+    .matrix-square-cell {
+      width: 100%;
+      height: auto;             // 🛠️ REMOVE ASPECT-RATIO: 1/1 SO THAT CELLS CAN EXPAND TO MATCH CUSTOM RESIZED CARD HEIGHTS
+      min-height: 340px;
+      overflow: visible;        // Lets layout handles resize outside the bounding drop zones safely
+      box-sizing: border-box;
+      background-color: $cell-surface;
+      border: 1px dashed $cell-border;
+      contain: layout paint; 
+      transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+  }
+  }
+
+  // 🪟 DELUXE MODULAR WIDGET PANELS (@dnd-kit Card Matrix)
+  .widget-portal-shell {
+    background-color: $panel-surface;
+    border: 1px solid $panel-border;
+    border-radius: 4px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    
+    // 🌟 NATIVE BROWSER ENGINE SCALE INJECTION
+    resize: both;             // Activates bidirectional mouse edge dragging
+    width: 100%;              // Defaults to occupy 100% of the slot anchor width container
+    height: 340px;            // Default baseline starting window panel height
+    
+    // Bounds parameters prevent text/table truncation states
+    min-width: 280px;         
+    min-height: 220px;
+    max-width: 100%;          // Clips cards from shattering past the desktop right margin lane
+    
+    will-change: width, height;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &.is-dragging-node {
+      opacity: 0.5 !important;
+      border-color: $amber-glint !important;
+    }
+  }
+  
+  // 🚀 CUSTOM MOCK-SHADCN SIDEBAR NAV SYSTEM
+  .custom-shadcn-sidebar-deck {
+    width: 240px;
+    min-width: 240px;
+    background-color: #141210; 
+    border-right: 1px solid $panel-border;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-sizing: border-box;
+    flex-shrink: 0;
+
+    .sidebar-inner-content {
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      height: 100%;
+    }
+
+    .sidebar-element-group {
+      display: flex;
+      flex-direction: column;
+      
+      .sidebar-group-label {
+        font-size: 9px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: color.adjust($text-mute, $lightness: -10%);
+        margin-bottom: 0.5rem;
+        padding-left: 0.5rem;
+      }
+
+      .sidebar-brand-card {
+        padding: 0.25rem 0.5rem;
+        
+        .brand-primary {
+          font-size: 11px;
+          font-weight: 700;
+          color: $amber-glint;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+        .brand-secondary {
+          font-size: 9px;
+          color: color.adjust($text-mute, $lightness: -5%);
+          text-transform: uppercase;
+          margin-top: 0.15rem;
+        }
+      }
+    }
+
+    .sidebar-menu-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+
+      .sidebar-menu-button {
+        width: 100%;
+        text-align: left;
+        background-color: transparent;
+        border: 1px solid transparent;
+        padding: 0.45rem 0.6rem;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: color.adjust($text-primary, $lightness: -20%);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 10px;
+        letter-spacing: 0.04em;
+        transition: all 0.15s ease;
+        cursor: pointer;
+
+        .menu-icon-asset {
+          height: 14px;
+          width: 14px;
+          color: color.adjust($text-mute, $lightness: -5%);
+          transition: color 0.15s ease;
+        }
+
+        &:hover:not(:disabled) {
+          background-color: color.adjust($panel-surface, $lightness: 4%);
+          color: $amber-glint;
+          
+          .menu-icon-asset { color: $amber-glint; }
+        }
+
+        &.is-active-on-canvas {
+          opacity: 0.25;
+          cursor: not-allowed;
+          background-color: #090706;
+          color: color.adjust($text-mute, $lightness: -15%);
+          
+          .menu-icon-asset { color: color.adjust($text-mute, $lightness: -30%); }
+        }
+      }
+    }
+
+    .sidebar-divider {
+      border: none;
+      border-top: 1px solid rgba($panel-border, 0.4);
+      margin: 0 0.25rem;
+    }
+  }
+
+  // 📊 HIGH-DENSITY TANSTACK DATAGRID MATRIX OVERRIDES
+  .apex-data-grid-container {
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      
+      thead tr {
+        background-color: color.adjust($panel-surface, $lightness: -2%);
+        border-bottom: 1px solid $panel-border;
+        color: color.adjust($text-mute, $lightness: -10%);
+        font-size: 9px;
+        letter-spacing: 0.08em;
+      }
+
+      th, td {
+        padding: 0.5rem 0.6rem;
+        border-right: 1px solid color.adjust($panel-border, $lightness: -5%);
+        &:last-child { border-right: none; }
+      }
+
+      tbody tr {
+        border-bottom: 1px solid rgba($panel-border, 0.3);
+        transition: background-color 0.15s ease;
+        
+        &:hover {
+          background-color: rgba($amber-glint, 0.02);
+        }
+      }
+    }
+  }
