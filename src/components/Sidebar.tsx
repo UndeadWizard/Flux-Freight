@@ -1,23 +1,27 @@
 // src/components/Sidebar.tsx
-import { useGameStore } from '../store/useGameStore';
+import { useDroppable } from '@dnd-kit/react';
 import { useVaultStore } from '../store/useVaultStore';
-import { Coins, Weight, Layers } from 'lucide-react';
+import { Coins, Weight } from 'lucide-react';
+import TrayCard from './TrayCard';
+import { TILE_DEFS, type TileId } from './SnapGridWorkSpace';
 
-export default function Sidebar() {
-  const { assignments, mountWidgetInFirstOpenSlot } = useGameStore();
+interface SidebarProps {
+  tray: TileId[];
+}
+
+export default function Sidebar({ tray }: SidebarProps) {
   const { gold, maxWeight, getCurrentWeight } = useVaultStore();
+  const { ref: trayRef, isDropTarget: isTrayDropTarget } = useDroppable({
+    id: 'palette-tray-dropzone',
+    type: 'tray',
+    accept: ['grid-item', 'tray-card'],
+  });
 
   const currentWeight = getCurrentWeight();
   const weightPercentage = Math.min(100, (currentWeight / maxWeight) * 100);
 
-  const navigationModules = [
-    { id: 'ledger', label: 'Commodity Ledger' },
-    { id: 'vault', label: 'Guild Bank Vault' },
-    { id: 'logs', label: 'System Ticker Logs' }
-  ] as const;
-
   return (
-    <aside>
+    <aside className="tray-dashboard-panel">
       <hr className="border-stone-800" />
 
       <div className="flex flex-col gap-3">
@@ -44,29 +48,20 @@ export default function Sidebar() {
 
       <hr className="border-stone-800" />
 
-      {/* Dynamic Spawn Button Group Controllers */}
-      <div className="flex-1 flex flex-col gap-1.5">
-        {navigationModules.map((mod) => {
-          // Check if this specific module type is currently loaded anywhere inside our grid slots
-          const isCurrentlyActiveOnCanvas = Object.values(assignments).includes(mod.id);
-
-          return (
-            <button
-              key={mod.id}
-              type="button"
-              disabled={isCurrentlyActiveOnCanvas}
-              onClick={() => mountWidgetInFirstOpenSlot(mod.id)}
-              className={`w-full text-left border p-2 rounded font-semibold uppercase tracking-wider text-[10px] flex items-center gap-2 transition-all ${
-                isCurrentlyActiveOnCanvas
-                  ? 'bg-stone-950 border-stone-900/40 text-stone-700 cursor-not-allowed opacity-30'
-                  : 'bg-stone-950 hover:bg-stone-800 border-stone-800 text-stone-400 hover:text-amber-400 cursor-pointer'
-              }`}
-            >
-              <Layers className="h-3 w-3 text-stone-600" />
-              {isCurrentlyActiveOnCanvas ? `Active_${mod.id}` : `Mount_${mod.id}`}
-            </button>
-          );
-        })}
+      <div className="flex flex-col gap-3 flex-1 min-h-0">
+        <div className="tray-panel-header">Module Tray</div>
+        <div
+          ref={trayRef}
+          className={`tray-dropzone tray-card-stack ${isTrayDropTarget ? 'is-hovered-target' : ''}`}
+        >
+          {tray.length === 0 ? (
+            <div className="tray-empty-state">Drop dashboard modules here to stash them.</div>
+          ) : (
+            tray.map((id, index) => (
+              <TrayCard key={id} id={id} index={index} title={TILE_DEFS[id].title} />
+            ))
+          )}
+        </div>
       </div>
     </aside>
   );
