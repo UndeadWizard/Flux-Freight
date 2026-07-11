@@ -1,17 +1,22 @@
 // src/components/DashboardTile.tsx
-import React, { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useGameStore, type WidgetNode } from '../store/useGameStore';
 import { X, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
+
+interface WidgetNode {
+  id: string;
+  title: string;
+  sizeClass: string;
+}
 
 interface TileProps {
   widget: WidgetNode;
-  children: React.ReactNode;
+  onRemove?: (id: string) => void;
+  children: ReactNode;
 }
 
-export default function DashboardTile({ widget, children }: TileProps) {
-  const removeWidget = useGameStore((state) => state.removeWidget);
+export default function DashboardTile({ widget, onRemove, children }: TileProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const {
@@ -62,7 +67,7 @@ export default function DashboardTile({ widget, children }: TileProps) {
             </button>
             <button 
               type="button" 
-              onClick={() => removeWidget(widget.id)} 
+              onClick={() => onRemove?.(widget.id)} 
               className="text-stone-600 hover:text-rose-400 transition-colors cursor-pointer border-l border-stone-800 pl-1.5"
             >
               <X className="h-3 w-3" />

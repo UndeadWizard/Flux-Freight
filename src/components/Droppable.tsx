@@ -4,16 +4,19 @@ import { useDroppable } from '@dnd-kit/react';
 
 interface DroppableProps {
   id: string;
+  type?: string;
+  accept?: string | string[] | ((source: any) => boolean);
+  variant?: 'grid' | 'tray';
   children: React.ReactNode;
 }
 
-export default function Droppable({ id, children }: DroppableProps) {
+export default function Droppable({ id, type, accept, variant = 'grid', children }: DroppableProps) {
   /* 
      ⚠️ THE EXACT TS V2 COMPILATION FIX:
      'isDropTarget' is the official property that tracks real-time hovering in v2.
      We completely drop the non-existent 'droppable.isOver' reference line.
   */
-  const { ref, isDropTarget } = useDroppable({ id });
+  const { ref, isDropTarget } = useDroppable({ id, type, accept });
 
   return (
     <div 
@@ -22,10 +25,12 @@ export default function Droppable({ id, children }: DroppableProps) {
          🚀 GLOW INJECTION:
          Maps 'isDropTarget' directly to our luxury '.is-hovered-target' SCSS animation class rules.
       */
-      className={`matrix-square-cell rounded border flex items-center justify-center transition-all duration-200 ${
+      className={`${variant === 'tray' ? 'tray-dropzone' : 'matrix-square-cell'} rounded border flex items-center justify-center transition-all duration-200 ${
         isDropTarget 
           ? 'is-hovered-target' 
-          : 'border-stone-900/40 bg-stone-950/20'
+          : variant === 'tray'
+            ? 'border-stone-800/80 bg-stone-950/55'
+            : 'border-stone-900/40 bg-stone-950/20'
       }`}
     >
       {children ? (

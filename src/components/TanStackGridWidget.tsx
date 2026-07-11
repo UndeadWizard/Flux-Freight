@@ -1,5 +1,5 @@
 // src/components/TanStackGridWidget.tsx
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useReactTable, getCoreRowModel, getSortedRowModel, flexRender, type SortingState } from '@tanstack/react-table';
 import { ArrowUpDown } from 'lucide-react';
 

@@ -1,6 +1,7 @@
 // src/store/useVaultStore.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware'; // <-- 1. Pull in the persistence engine middleware
+import { tMarket } from '../engine/market/localization';
 
 export interface VaultItem {
   id: string;
@@ -28,8 +29,8 @@ export const useVaultStore = create<VaultState>()(
       gold: 5000,
       maxWeight: 1000,
       items: {
-        dwarven_steel: { id: 'dwarven_steel', name: 'Dwarven Steel', quantity: 20, weightPerUnit: 4.5 },
-        dragon_scale: { id: 'dragon_scale', name: 'Dragon Scale', quantity: 3, weightPerUnit: 12.0 },
+        dwarven_steel: { id: 'dwarven_steel', name: tMarket('market.item.dwarven_steel.name', 'Dwarven Steel'), quantity: 20, weightPerUnit: 4.5 },
+        dragon_scale: { id: 'dragon_scale', name: tMarket('market.item.dragon_scale.name', 'Dragon Scale'), quantity: 3, weightPerUnit: 12.0 },
       },
 
       getCurrentWeight: () => {

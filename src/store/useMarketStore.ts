@@ -1,45 +1,34 @@
 // src/store/useMarketStore.ts
 import { create } from 'zustand';
-import { type MarketState, type MarketItem } from '../engine/types.ts';
+import { type MarketItemMap, type MarketState } from '../engine/types.ts';
+import { MARKET_ITEM_CATALOG, createInitialMarketItems, getMarketItemDefinition } from '../engine/market/items';
 
-const INITIAL_ITEMS: Record<string, MarketItem> = {
-  dragon_scale: {
-    id: 'dragon_scale',
-    name: 'Dragon Scale',
-    category: 'Raw',
-    basePrice: 150,
-    currentPrice: 150,
-    volatility: 0.12,
-    manaLeakRate: 0,
-    productionModifiers: { Orc: 1.4, Dwarf: 1.0, Human: 0.9, Elf: 0.6 }
-  },
-  unstable_ether: {
-    id: 'unstable_ether',
-    name: 'Unstable Ether',
-    category: 'Arcane',
-    basePrice: 500,
-    currentPrice: 500,
-    volatility: 0.35, // High price swings due to magic flux
-    manaLeakRate: 0.05, // Degrades by 5% per tick in storage
-    productionModifiers: { Elf: 1.5, Human: 1.0, Dwarf: 0.4, Orc: 0.2 }
-  },
-  dwarven_steel: {
-    id: 'dwarven_steel',
-    name: 'Dwarven Steel',
-    category: 'Processed',
-    basePrice: 80,
-    currentPrice: 80,
-    volatility: 0.05, // Extremely stable commodity
-    manaLeakRate: 0,
-    productionModifiers: { Dwarf: 1.6, Human: 1.0, Orc: 1.0, Elf: 0.5 }
-  }
-};
+const INITIAL_ITEMS: MarketItemMap = createInitialMarketItems();
+
+function withClampedPrice(items: MarketItemMap, id: string, nextPrice: number): MarketItemMap {
+  const item = items[id];
+  if (!item) return items;
+
+  const clampedPrice = Math.max(item.basePrice * 0.3, Math.min(item.basePrice * 3, nextPrice));
+
+  return {
+    ...items,
+    [id]: {
+      ...item,
+      currentPrice: Math.round(clampedPrice * 100) / 100,
+    },
+  };
+}
 
 export const useMarketStore = create<MarketState>((set) => ({
   items: INITIAL_ITEMS,
+  // Folder and definition data stay separate from runtime state so new item packs can be
+  // added by appending modules under src/engine/market/items.
+  // The UI can still consume only items unless it needs catalog metadata.
+  // (The catalog is intentionally not stored in the mutable slice.)
   gameTick: 0,
   logs: ['Market terminal initialized. Welcome to Flux & Freight.'],
-  isPaused: false, // <-- Game runs by default
+  isPaused: false,
 
   togglePause: () => set((state) => {
     const nextPaused = !state.isPaused;
@@ -57,31 +46,36 @@ export const useMarketStore = create<MarketState>((set) => ({
     if (state.isPaused) return {}; 
 
     const nextTick = state.gameTick + 1;
-    const updatedItems = { ...state.items };
+    let updatedItems = { ...state.items };
     let newLog = `Tick ${nextTick}: Market supply shifts.`;
 
     // Simulate simple supply/demand market noise
     Object.keys(updatedItems).forEach((id) => {
       const item = updatedItems[id];
+      if (!item) return;
+
       const randomChange = (Math.random() - 0.5) * 2 * item.volatility;
       
       // Calculate new price but clamp it so items don't become free
       let newPrice = item.currentPrice * (1 + randomChange);
       newPrice = Math.max(item.basePrice * 0.3, Math.min(item.basePrice * 3, newPrice));
-      
-      updatedItems[id] = {
-        ...item,
-        currentPrice: Math.round(newPrice * 100) / 100
-      };
+
+      updatedItems = withClampedPrice(updatedItems, id, newPrice);
     });
 
     // Random Macro-Economic Fantasy Events
     const roll = Math.random();
     if (roll < 0.2) {
-      updatedItems['unstable_ether'].currentPrice *= 1.4;
+      const unstableEther = updatedItems.unstable_ether;
+      if (unstableEther) {
+        updatedItems = withClampedPrice(updatedItems, 'unstable_ether', unstableEther.currentPrice * 1.4);
+      }
       newLog = `Tick ${nextTick}: ⚠️ Mana Flare detected! Arcane item prices surge.`;
     } else if (roll > 0.8) {
-      updatedItems['dwarven_steel'].currentPrice *= 0.85;
+      const dwarvenSteel = updatedItems.dwarven_steel;
+      if (dwarvenSteel) {
+        updatedItems = withClampedPrice(updatedItems, 'dwarven_steel', dwarvenSteel.currentPrice * 0.85);
+      }
       newLog = `Tick ${nextTick}: ⚒️ Dwarven deep mines report massive surplus. Steel prices drop.`;
     }
 
@@ -90,5 +84,8 @@ export const useMarketStore = create<MarketState>((set) => ({
       items: updatedItems,
       logs: [newLog, ...state.logs.slice(0, 14)] // Keep last 15 logs
     };
-  })
+  }),
+
+  getItemDefinition: (id: string) => getMarketItemDefinition(id),
+  itemCatalog: MARKET_ITEM_CATALOG,
 }));

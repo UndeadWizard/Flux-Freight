@@ -1,18 +1,20 @@
 // src/components/Draggable.tsx
 import React from 'react';
 import { useDraggable } from '@dnd-kit/react';
-import { GripVertical, X } from 'lucide-react';
+import { GripVertical } from 'lucide-react';
 
 interface DraggableProps {
   id: string;
+  type?: string;
   title: string;
   onClose: () => void;
+  className?: string;
   children: React.ReactNode;
 }
 
-export default function Draggable({ id, title, onClose, children }: DraggableProps) {
+export default function Draggable({ id, type, title, onClose, className, children }: DraggableProps) {
   // Extract the drag framework tracking elements
-  const { ref, isDragging } = useDraggable({ id });
+  const { ref, isDragging } = useDraggable({ id, type });
 
   return (
     <div 
@@ -26,7 +28,7 @@ export default function Draggable({ id, title, onClose, children }: DraggablePro
         opacity: isDragging ? 0.3 : 1,
         transition: 'transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.15s ease',
       }}
-      className={`w-full h-full widget-portal-shell ${isDragging ? 'is-dragging-node' : ''}`}
+      className={`w-full h-full widget-portal-shell ${isDragging ? 'is-dragging-node' : ''} ${className ?? ''}`}
     >
       <div className="widget-drag-header flex justify-between items-center select-none font-mono">
         <div className="flex items-center gap-2">

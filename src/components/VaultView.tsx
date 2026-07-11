@@ -1,5 +1,5 @@
 // src/components/VaultView.tsx
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useVaultStore } from '../store/useVaultStore';
 import { createColumnHelper } from '@tanstack/react-table';
 import TanStackGridWidget from './TanStackGridWidget';

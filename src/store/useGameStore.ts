@@ -28,7 +28,7 @@ const SEED_ASSIGNMENTS: Record<string, WidgetType | null> = {
 
 export const useGameStore = create<GameState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       gameTick: 0,
       isPaused: false,
       assignments: SEED_ASSIGNMENTS,

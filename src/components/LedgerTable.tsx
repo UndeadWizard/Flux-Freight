@@ -1,11 +1,12 @@
 // src/components/LedgerTable.tsx
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useMarketStore } from '../store/useMarketStore';
 import { useUiStore } from '../store/useUIStore';
 import { useVaultStore } from '../store/useVaultStore';
 import { createColumnHelper } from '@tanstack/react-table';
 import { ShieldAlert, TrendingUp, TrendingDown } from 'lucide-react';
 import TanStackGridWidget from './TanStackGridWidget';
+import { formatMarketItemLabel, tMarket } from '../engine/market/localization';
 
 export default function LedgerTable() {
   const items = useMarketStore((state) => state.items);
@@ -36,9 +37,9 @@ export default function LedgerTable() {
           <div className="font-semibold flex flex-col gap-0.5">
             <span className="flex items-center gap-1.5 text-stone-200">
               {item.manaLeakRate > 0 && <ShieldAlert className="h-3 w-3 text-purple-400" />}
-              {item.name.toUpperCase().replace(' ', '_')}
+              {formatMarketItemLabel(item.nameKey, item.name, item.folderKey)}
             </span>
-            <span className="text-[9px] text-stone-500 uppercase tracking-widest">{item.category}</span>
+            <span className="text-[9px] text-stone-500 uppercase tracking-widest">{tMarket(`market.category.${item.category}`, item.category)}</span>
           </div>
         );
       }
@@ -77,25 +78,21 @@ export default function LedgerTable() {
         const item = info.row.original;
         const storedQty = vaultItems[item.id]?.quantity || 0;
         return (
-          <div className="flex justify-end gap-1.5">
+          <div className="trade-actions">
             <button
               type="button"
               onClick={() => handleBuy(item)}
-              className="bg-emerald-950/20 hover:bg-emerald-900/40 text-emerald-400 border border-emerald-800/40 px-2 py-0.5 rounded font-bold uppercase transition-all tracking-wider cursor-pointer active:scale-95 text-[10px]"
+              className="text-[12px]"
             >
-              + Buy
+              +
             </button>
             <button
               type="button"
               onClick={() => handleSell(item)}
               disabled={storedQty <= 0}
-              className={`px-2 py-0.5 rounded font-bold uppercase border transition-all tracking-wider text-[10px] ${
-                storedQty > 0
-                  ? 'bg-rose-950/20 hover:bg-rose-900/40 text-rose-400 border-rose-800/40 cursor-pointer active:scale-95'
-                  : 'bg-stone-950 text-stone-700 border-stone-900 cursor-not-allowed opacity-30'
-              }`}
+              className={`text-[12px]`}
             >
-              - Sell
+              -
             </button>
           </div>
         );
