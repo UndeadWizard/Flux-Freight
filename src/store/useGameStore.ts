@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type WidgetType = 'ledger' | 'vault' | 'logs';
+export type WidgetType = 'ledger' | 'vault' | 'logs' | 'map';
 
 interface GameState {
   gameTick: number;
@@ -21,7 +21,7 @@ const SEED_ASSIGNMENTS: Record<string, WidgetType | null> = {
   SLOT_01: 'ledger',
   SLOT_02: 'vault',
   SLOT_03: 'logs',
-  SLOT_04: null,
+  SLOT_04: 'map',
   SLOT_05: null,
   SLOT_06: null
 };

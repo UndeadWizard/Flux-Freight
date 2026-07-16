@@ -22,8 +22,8 @@ interface UiState {
 const MODULE_TEMPLATES: Record<string, Omit<WindowModule, 'x' | 'y'>> = {
   ledger: { i: 'ledger', title: 'REGIONAL COMMODITY LEDGER', w: 8, h: 5 },
   logs: { i: 'logs', title: 'GUILD TICKER FEED', w: 4, h: 4 },
-  caravan: { i: 'caravan', title: 'CARAVAN FLEET MANAGEMENT', w: 4, h: 3 },
   vault: { i: 'vault', title: 'GUILD BANK VAULT', w: 6, h: 4 },
+  map: { i: 'map', title: 'CARAVAN FLEET MANAGEMENT', w: 4, h: 3 },
 };
 
 export const useUiStore = create<UiState>()(
@@ -33,7 +33,7 @@ export const useUiStore = create<UiState>()(
         { i: 'ledger', title: 'REGIONAL COMMODITY LEDGER', x: 0, y: 0, w: 8, h: 5 },
         { i: 'logs', title: 'GUILD TICKER FEED', x: 8, y: 0, w: 4, h: 4 }
       ],
-      commandHistory: ['APEX v1.26 Initialized. Type CMD <name> to spawn windows (ledger, logs, caravan, vault).'],
+      commandHistory: ['APEX v1.26 Initialized. Type CMD <name> to spawn windows (ledger, logs, map, vault).'],
 
       updateLayout: (newLayout) => set((state) => {
         const nextWindows = newLayout.map((gridItem) => {
@@ -78,7 +78,7 @@ export const useUiStore = create<UiState>()(
         }
         
         return { 
-          commandHistory: [`Unknown command: "${cmdString}". Use "cmd ledger", "cmd logs", "cmd caravan", or "cmd vault".`, ...state.commandHistory] 
+          commandHistory: [`Unknown command: "${cmdString}". Use "cmd ledger", "cmd logs", "cmd map", or "cmd vault".`, ...state.commandHistory] 
         };
       }),
 

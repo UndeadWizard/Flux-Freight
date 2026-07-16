@@ -39,7 +39,7 @@ export default function App() {
     { i: 'ledger', x: 0, y: 0, w: 4, h: 2 },
     { i: 'vault', x: 4, y: 0, w: 2, h: 2 },
   ]);
-  const [tray, setTray] = useState<TileId[]>(['logs']);
+  const [tray, setTray] = useState<TileId[]>(['logs', 'map']);
 
   useEffect(() => {
     const interval = setInterval(() => {

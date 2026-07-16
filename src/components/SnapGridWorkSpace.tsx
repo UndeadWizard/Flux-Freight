@@ -109,6 +109,11 @@ function Body({
       containerPadding: [16,16], 
     },
     isResizable: true,
+    dropConfig: {
+      enabled: true,
+      defaultItem: { w: 2, h: 2 },
+      accept: (source) => source.type === "tray-card",
+    },
     accept: (s) => s.type === "tray-card",
     compactor: noCompactor, // 2. Attached the compactor to the hook
   });

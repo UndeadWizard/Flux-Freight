@@ -1,5 +1,5 @@
 // src/components/TransitMap.tsx
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useGameStore } from '../store/useGameStore';
 
 // Define the geographical telemetry system parameters
@@ -100,7 +100,7 @@ export default function TransitMap() {
             // Mathematical linear interpolation tracking percent complete over engine ticks
             const elapsedTicks = Math.max(0, gameTick - caravan.startTick);
             const totalDuration = 20; // Ticks required to cross standard paths
-            const progress = (elapsedTicks * caravan.speed) % 100; // Loops for tracking simulation
+            const progress = Math.min((elapsedTicks * caravan.speed * 100) / totalDuration, 100);
             
             // Calculate active dynamic position vectors
             const currentX = fromNode.x + ((toNode.x - fromNode.x) * progress) / 100;
