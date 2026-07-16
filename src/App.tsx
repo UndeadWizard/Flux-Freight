@@ -4,8 +4,6 @@ import { DragDropProvider } from '@dnd-kit/react';
 import Header from './components/Header'; 
 import Sidebar from './components/Sidebar';
 import SnapGridWorkspace, {
-  BREAKPOINTS,
-  GRID_PROFILES,
   TILE_DEFS,
   type TileId,
 } from './components/SnapGridWorkSpace';
@@ -20,6 +18,9 @@ import {
   verticalCompactor,
 } from '@snapgridjs/react';
 
+// Static layout properties to feed SnapGrid modifiers directly
+const STATIC_GRID_COLS = 20;
+
 function isTileId(value: string): value is TileId {
   return value in TILE_DEFS;
 }
@@ -30,30 +31,10 @@ function insertBefore(list: TileId[], id: TileId, beforeId: string): TileId[] {
   return index < 0 ? [...without, id] : [...without.slice(0, index), id, ...without.slice(index)];
 }
 
-function useBreakpoint() {
-  const [breakpoint, setBreakpoint] = useState<'lg' | 'md' | 'sm'>('lg');
-
-  useEffect(() => {
-    const handleResize = () => {
-      const width = window.innerWidth;
-      if (width >= BREAKPOINTS.lg) setBreakpoint('lg');
-      else if (width >= BREAKPOINTS.md) setBreakpoint('md');
-      else setBreakpoint('sm');
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  return breakpoint;
-}
-
 export default function App() {
   const { isPaused, advanceTick } = useGameStore();
   const advanceMarketTick = useMarketStore((state) => state.advanceTick);
-  const breakpoint = useBreakpoint();
-  const currentGridConfig = GRID_PROFILES[breakpoint];
+  
   const [grid, setGrid] = useState<Layout>([
     { i: 'ledger', x: 0, y: 0, w: 4, h: 2 },
     { i: 'vault', x: 4, y: 0, w: 2, h: 2 },
@@ -77,7 +58,7 @@ export default function App() {
 
       {/* Symmetrical Left-to-Right layout row configuration */}
       <DragDropProvider
-          onDragOver={(event) => {
+          onDragEnd={(event) => {
           const { source, target } = event.operation;
           if (!source || !target) return;
 
@@ -97,7 +78,7 @@ export default function App() {
             setGrid((currentGrid) =>
               removeItemWithCompactor(currentGrid, id, {
                 compactor: verticalCompactor,
-                cols: currentGridConfig.cols,
+                cols: STATIC_GRID_COLS,
               }),
             );
 

@@ -14,20 +14,11 @@ $text-mute: #78716c;      // Ink fading charcoal slate text
 $amber-glint: #f59e0b;    // Neon alchemical liquid gold accent
 $mana-leak: #c084fc;      // Pulsating ethereal violet glow
 
-// 🛡️ REUSABLE MIXINS FOR SCISSOR-SHARP SCROLLBARS
-@mixin apex-scrollbars {
-  &::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
-  }
-  &::-webkit-scrollbar-track {
-    background: color.adjust($bg-matrix, $lightness: -2%);
-  }
-  &::-webkit-scrollbar-thumb {
-    background: $panel-border;
-    border-radius: 2px;
-    &:hover { background: $amber-glint; }
-  }
+@mixin snapgrid-tile-accent($color, $border-alpha, $shadow-alpha: 0.08) {
+  border-color: rgba($color, $border-alpha);
+  box-shadow:
+    0 0 0 1px rgba($color, $shadow-alpha) inset,
+    0 10px 25px rgba(0, 0, 0, 0.22);
 }
 
 // 🎛️ CORE TERMINAL MATRIX ENVIRONMENT STYLING
@@ -38,37 +29,12 @@ $mana-leak: #c084fc;      // Pulsating ethereal violet glow
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   user-select: none;
 
-  // INTERACTIVE CONSOLE STYLES
-  .apex-console-input-bar {
-    background-color: color.adjust($bg-matrix, $lightness: 3%);
-    border: 1px solid $panel-border;
-    border-radius: 4px;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
-    
-    input {
-      color: $amber-glint;
-      font-weight: 700;
-      &::placeholder { color: color.adjust($text-mute, $lightness: -20%); }
-    }
-  }
-
-  // 🛠️ HORIZONTAL LAYOUT WORKSPACE DECK ROW WRAPPER
+  //HORIZONTAL LAYOUT WORKSPACE DECK ROW WRAPPER
   .apex-split-workspace-deck {
     display: flex !important;
-    flex-direction: row !important; // Forces sidebar left, canvas right
-    gap: 1rem;
-    flex: 1;
-    overflow: hidden;
+    gap: 8px;
     position: relative;
     width: 100%;
-  }
-
-  .dashboard-workspace-shell {
-    display: grid;
-    grid-template-columns: minmax(220px, 290px) 1fr;
-    gap: 1rem;
-    align-items: start;
-    height: 100%;
   }
 
   .tray-dashboard-panel {
@@ -112,9 +78,13 @@ $mana-leak: #c084fc;      // Pulsating ethereal violet glow
     }
   }
 
-  .tray-card-stack {
+  .tray-card-stack,
+  .tray-card-meta {
     display: flex;
     flex-direction: column;
+  }
+
+  .tray-card-stack {
     gap: 0.5rem;
     height: 100%;
   }
@@ -154,8 +124,6 @@ $mana-leak: #c084fc;      // Pulsating ethereal violet glow
 
   .tray-card-meta {
     min-width: 0;
-    display: flex;
-    flex-direction: column;
     gap: 0.1rem;
   }
 
@@ -179,23 +147,19 @@ $mana-leak: #c084fc;      // Pulsating ethereal violet glow
     height: 100%;
   }
 
-  .snapgrid-surface {
-    border: 1px solid rgba(#4c7c94, 0.45);
-    background:
-      radial-gradient(circle at top left, rgba(#38bdf8, 0.14), transparent 34%),
-      radial-gradient(circle at bottom right, rgba(#0f766e, 0.16), transparent 36%),
-      radial-gradient(rgba(#7dd3fc, 0.08) 0.5px, transparent 0.5px);
-    background-size: 16px 16px;
-    border-radius: 4px;
-    padding: 1.25rem;
-    min-height: 620px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .snapgrid-measure-shell .snapgrid-surface {
-    position: absolute;
-    inset: 0;
+  .snapgrid-measure-shell{
+    .snapgrid-surface {
+      border: 1px solid rgba(#4c7c94, 0.45);
+      background:
+        radial-gradient(circle at top left, rgba(#38bdf8, 0.14), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(#0f766e, 0.16), transparent 36%),
+        radial-gradient(rgba(#7dd3fc, 0.08) 0.5px, transparent 0.5px);
+      background-size: 16px 16px;
+      border-radius: 4px;
+      height: 644px;
+      position: absolute;
+      inset: 0;
+    }
   }
 
   .snapgrid-surface--cool {
@@ -218,9 +182,9 @@ $mana-leak: #c084fc;      // Pulsating ethereal violet glow
     position: relative;
     height: 100%;
     min-height: 0;
+    z-index: 10;
     min-width: 0;
     max-width: 100%;
-    box-sizing: border-box;
     border-radius: 10px;
     border: 1px solid rgba($panel-border, 0.95);
     background:
@@ -228,7 +192,6 @@ $mana-leak: #c084fc;      // Pulsating ethereal violet glow
     box-shadow:
       0 1px 0 rgba(255, 255, 255, 0.02) inset,
       0 10px 25px rgba(0, 0, 0, 0.22);
-    overflow: hidden;
     display: flex;
     flex-direction: column;
   }
@@ -242,53 +205,31 @@ $mana-leak: #c084fc;      // Pulsating ethereal violet glow
     overflow: auto;
   }
 
-  .snapgrid-tile__content .apex-data-grid-container {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-  }
-
-  .snapgrid-tile__content .apex-data-grid-container table {
-    width: 100%;
-    max-width: 100%;
-    table-layout: fixed;
-  }
-
-  .snapgrid-tile__content .apex-data-grid-container th,
-  .snapgrid-tile__content .apex-data-grid-container td {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    vertical-align: top;
-  }
-
   .snapgrid-tile--ledger {
-    border-color: rgba(#f59e0b, 0.55);
-    box-shadow:
-      0 0 0 1px rgba(#f59e0b, 0.08) inset,
-      0 10px 25px rgba(0, 0, 0, 0.22);
+    @include snapgrid-tile-accent(#f59e0b, 0.55);
+
+    .tile-resize-handle-se {
+      border-color: rgba(#f59e0b, 0.5);
+      background: rgba(#f59e0b, 0.18);
+    }
   }
 
   .snapgrid-tile--vault {
-    border-color: rgba(#14b8a6, 0.52);
-    box-shadow:
-      0 0 0 1px rgba(#14b8a6, 0.08) inset,
-      0 10px 25px rgba(0, 0, 0, 0.22);
+    @include snapgrid-tile-accent(#14b8a6, 0.52);
+
+      .tile-resize-handle-se {
+        border-color: rgba(#14b8a6, 0.5);
+        background: rgba(#14b8a6, 0.18);
+      }
   }
 
   .snapgrid-tile--logs {
-    border-color: rgba(#c084fc, 0.5);
-    box-shadow:
-      0 0 0 1px rgba(#c084fc, 0.08) inset,
-      0 10px 25px rgba(0, 0, 0, 0.22);
-  }
+    @include snapgrid-tile-accent(#c084fc, 0.5);
 
-  .snapgrid-tile.widget-portal-shell {
-    height: 100%;
-    min-height: 0;
-    min-width: 0;
-    max-width: none;
-    resize: none;
-    position: relative;
+    .tile-resize-handle-se {
+      border-color: rgba(#c084fc, 0.5);
+      background: rgba(#c084fc, 0.18);
+    }
   }
 
   .tile-resize-handle {
@@ -330,251 +271,11 @@ $mana-leak: #c084fc;      // Pulsating ethereal violet glow
     transform: translateY(0);
   }
 
-  .tile-resize-handle-n {
-    top: -2px;
-    left: calc(50% - 7px);
-    cursor: n-resize;
-  }
-
-  .tile-resize-handle-s {
-    bottom: -2px;
-    left: calc(50% - 7px);
-    cursor: s-resize;
-  }
-
-  .tile-resize-handle-e {
-    right: -2px;
-    top: calc(50% - 7px);
-    cursor: e-resize;
-  }
-
-  .tile-resize-handle-w {
-    left: -2px;
-    top: calc(50% - 7px);
-    cursor: w-resize;
-  }
-
-  .tile-resize-handle-ne {
-    top: -2px;
-    right: -2px;
-    cursor: ne-resize;
-  }
-
-  .tile-resize-handle-nw {
-    top: -2px;
-    left: -2px;
-    cursor: nw-resize;
-  }
-
   .tile-resize-handle-se {
-    right: -2px;
-    bottom: -2px;
-    cursor: se-resize;
+    right: 0px;
+    bottom: 0px;
+    border-radius: 16px;
   }
-
-  .tile-resize-handle-sw {
-    left: -2px;
-    bottom: -2px;
-    cursor: sw-resize;
-  }
-
-  // DESKTOP SYSTEM BACKGROUND GRID CANVAS (dnd-kit Context Box)
-  .grid-workspace-canvas {
-    flex: 1;
-    border: 1px solid rgba($panel-border, 0.4);
-    background-image: radial-gradient(rgba($amber-glint, 0.1) 0.5px, transparent 0.5px);
-    background-size: 16px 16px;
-    border-radius: 4px;
-    padding: 1.5rem; 
-
-  
-    .matrix-square-deck {
-      display: flex;
-      flex-wrap: wrap;       // Automatically wraps cards down to the next row when they expand out
-      gap: 1.5rem;           // Symmetrical layout spacing between slots
-      width: 100%;
-      align-items: flex-start;
-
-      // 🛠️ MODERN ADJUSTMENT: Droppable cells now act as flexible base anchors
-      .matrix-square-cell {
-        flex: 1 1 calc(33.333% - 1rem); // Defaults to a 3-column split width baseline
-        min-width: 280px;               // Prevents tiles from compressing past a readable size
-        height: auto;
-        min-height: 340px;
-        box-sizing: border-box;
-        background-color: $cell-surface;
-        border: 1px dashed $cell-border;
-        contain: layout paint; 
-        transition: border-color 0.2s ease, background-color 0.2s ease;
-
-        &.is-hovered-target {
-          border: 1px solid rgba($amber-glint, 0.6) !important;
-          background-color: rgba($amber-glint, 0.04) !important;
-          box-shadow: 0 0 20px rgba($amber-glint, 0.15), inset 0 0 15px rgba($amber-glint, 0.08) !important;
-        }
-      }
-    }
-  }
-
-    // 🌟 PERFECT SYMMETRICAL SQUARE GRID LAYOUT DECK
-    .matrix-square-deck {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr)); 
-    gap: 1.5rem;                                      
-    width: 100%;
-
-    .matrix-square-cell {
-      width: 100%;
-      height: auto;             // 🛠️ REMOVE ASPECT-RATIO: 1/1 SO THAT CELLS CAN EXPAND TO MATCH CUSTOM RESIZED CARD HEIGHTS
-      min-height: 340px;
-      overflow: visible;        // Lets layout handles resize outside the bounding drop zones safely
-      box-sizing: border-box;
-      background-color: $cell-surface;
-      border: 1px dashed $cell-border;
-      contain: layout paint; 
-      transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
-    }
-  }
-  }
-
-  // 🪟 DELUXE MODULAR WIDGET PANELS (@dnd-kit Card Matrix)
-  .widget-portal-shell {
-    background-color: $panel-surface;
-    border: 1px solid $panel-border;
-    border-radius: 4px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    
-    // 🌟 NATIVE BROWSER ENGINE SCALE INJECTION
-    resize: both;             // Activates bidirectional mouse edge dragging
-    width: 100%;              // Defaults to occupy 100% of the slot anchor width container
-    height: 340px;            // Default baseline starting window panel height
-    
-    // Bounds parameters prevent text/table truncation states
-    min-width: 280px;         
-    min-height: 220px;
-    max-width: 100%;          // Clips cards from shattering past the desktop right margin lane
-    
-    will-change: width, height;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-
-    &.is-dragging-node {
-      opacity: 0.5 !important;
-      border-color: $amber-glint !important;
-    }
-  }
-  
-  // 🚀 CUSTOM MOCK-SHADCN SIDEBAR NAV SYSTEM
-  .custom-shadcn-sidebar-deck {
-    width: 240px;
-    min-width: 240px;
-    background-color: #141210; 
-    border-right: 1px solid $panel-border;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    box-sizing: border-box;
-    flex-shrink: 0;
-
-    .sidebar-inner-content {
-      padding: 0.75rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
-      height: 100%;
-    }
-
-    .sidebar-element-group {
-      display: flex;
-      flex-direction: column;
-      
-      .sidebar-group-label {
-        font-size: 9px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
-        color: color.adjust($text-mute, $lightness: -10%);
-        margin-bottom: 0.5rem;
-        padding-left: 0.5rem;
-      }
-
-      .sidebar-brand-card {
-        padding: 0.25rem 0.5rem;
-        
-        .brand-primary {
-          font-size: 11px;
-          font-weight: 700;
-          color: $amber-glint;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-        }
-        .brand-secondary {
-          font-size: 9px;
-          color: color.adjust($text-mute, $lightness: -5%);
-          text-transform: uppercase;
-          margin-top: 0.15rem;
-        }
-      }
-    }
-
-    .sidebar-menu-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-
-      .sidebar-menu-button {
-        width: 100%;
-        text-align: left;
-        background-color: transparent;
-        border: 1px solid transparent;
-        padding: 0.45rem 0.6rem;
-        border-radius: 4px;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: color.adjust($text-primary, $lightness: -20%);
-        font-weight: 600;
-        text-transform: uppercase;
-        font-size: 10px;
-        letter-spacing: 0.04em;
-        transition: all 0.15s ease;
-        cursor: pointer;
-
-        .menu-icon-asset {
-          height: 14px;
-          width: 14px;
-          color: color.adjust($text-mute, $lightness: -5%);
-          transition: color 0.15s ease;
-        }
-
-        &:hover:not(:disabled) {
-          background-color: color.adjust($panel-surface, $lightness: 4%);
-          color: $amber-glint;
-          
-          .menu-icon-asset { color: $amber-glint; }
-        }
-
-        &.is-active-on-canvas {
-          opacity: 0.25;
-          cursor: not-allowed;
-          background-color: #090706;
-          color: color.adjust($text-mute, $lightness: -15%);
-          
-          .menu-icon-asset { color: color.adjust($text-mute, $lightness: -30%); }
-        }
-      }
-    }
-
-    .sidebar-divider {
-      border: none;
-      border-top: 1px solid rgba($panel-border, 0.4);
-      margin: 0 0.25rem;
-    }
   }
 
   // 📊 HIGH-DENSITY TANSTACK DATAGRID MATRIX OVERRIDES
@@ -623,15 +324,5 @@ $mana-leak: #c084fc;      // Pulsating ethereal violet glow
           background-color: rgba($amber-glint, 0.02);
         }
       }
-    }
-  }
-
-  @media (max-width: 1100px) {
-    .dashboard-workspace-shell {
-      grid-template-columns: 1fr;
-    }
-
-    .tray-dropzone {
-      min-height: 180px;
     }
   }

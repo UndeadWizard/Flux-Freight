@@ -55,7 +55,7 @@ export default function Sidebar({ tray }: SidebarProps) {
           className={`tray-dropzone tray-card-stack ${isTrayDropTarget ? 'is-hovered-target' : ''}`}
         >
           {tray.length === 0 ? (
-            <div className="tray-empty-state">Drop dashboard modules here to stash them.</div>
+            <div className="tray-empty-state">Drop dashboard modules here</div>
           ) : (
             tray.map((id, index) => (
               <TrayCard key={id} id={id} index={index} title={TILE_DEFS[id].title} />

@@ -2,29 +2,23 @@
 
 import {
   type Layout,
+  noCompactor, // 1. Imported the compactor here
   useContainerWidth,
   useGridContainer,
   useGridItem,
   useGridPlaceholder,
   useGridResizeHandle,
 } from "@snapgridjs/react";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode } from "react";
 import LedgerTable from "./LedgerTable";
 import TickerLogs from "./TickerLogs";
 import VaultView from "./VaultView";
+import TransitMap from "./TransitMap"
 
-// Responsive grid profiles and breakpoints
-export const BREAKPOINTS = { lg: 1200, md: 768, sm: 480 };
+// Unified grid layout configuration
+export const GRID_CONFIG = { cols: 20, rowHeight: 65 };
 
-export const GRID_PROFILES = {
-  lg: { cols: 6, rowHeight: 60 },
-  md: { cols: 4, rowHeight: 55 },
-  sm: { cols: 2, rowHeight: 50 },
-};
-
-const GAP = 16; 
-
-export type TileId = "ledger" | "vault" | "logs";
+export type TileId = "ledger" | "vault" | "logs" | "map";
 
 type TileTheme = {
   title: string;
@@ -36,30 +30,11 @@ export const TILE_DEFS: Record<TileId, TileTheme> = {
   ledger: { title: "Commodity Ledger", accentClass: "snapgrid-tile--ledger", render: () => <LedgerTable /> },
   vault: { title: "Guild Bank Vault", accentClass: "snapgrid-tile--vault", render: () => <VaultView /> },
   logs: { title: "System Ticker Logs", accentClass: "snapgrid-tile--logs", render: () => <TickerLogs /> },
+  map: { title: "map", accentClass: "snapgrid-tile--logs", render: () => <TransitMap /> },
 };
 
 function isTileId(value: string): value is TileId {
   return value in TILE_DEFS;
-}
-
-// Hook to track current layout tier dynamically
-function useBreakpoint() {
-  const [breakpoint, setBreakpoint] = useState<"lg" | "md" | "sm">("lg");
-
-  useEffect(() => {
-    const handleResize = () => {
-      const w = window.innerWidth;
-      if (w >= BREAKPOINTS.lg) setBreakpoint("lg");
-      else if (w >= BREAKPOINTS.md) setBreakpoint("md");
-      else setBreakpoint("sm");
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  return breakpoint;
 }
 
 interface SnapGridWorkspaceProps {
@@ -68,15 +43,10 @@ interface SnapGridWorkspaceProps {
 }
 
 export default function SortableGridExample({ grid, setGrid }: SnapGridWorkspaceProps) {
-  const breakpoint = useBreakpoint();
-  const currentGridConfig = GRID_PROFILES[breakpoint];
-
   return (
     <Body 
       grid={grid} 
       setGrid={setGrid} 
-      gridConfig={currentGridConfig} 
-      breakpoint={breakpoint} 
     />
   );
 }
@@ -84,60 +54,83 @@ export default function SortableGridExample({ grid, setGrid }: SnapGridWorkspace
 function Body({
   grid,
   setGrid,
-  gridConfig,
-  breakpoint,
 }: {
   grid: Layout;
   setGrid: (next: Layout) => void;
-  gridConfig: { cols: number; rowHeight: number };
-  breakpoint: "lg" | "md" | "sm";
 }) {
-  const isMobile = breakpoint === "sm";
-  const initialWidthEstimate = isMobile ? 340 : breakpoint === "md" ? 600 : 900;
-  
-  const { width, containerRef } = useContainerWidth({ initialWidth: initialWidthEstimate });
+  // Uses a single baseline fallback measurement for initial layout generation
+  const { width, containerRef } = useContainerWidth({ initialWidth: 1200 });
   
   const { containerProps, group } = useGridContainer({
     layout: grid,
     width,
-    onLayoutChange: setGrid,
-    gridConfig: gridConfig,
+    onLayoutChange: (nextLayout) => {
+      const MAX_ALLOWED_ROWS = 8;
+      
+      const hasOutOfBounds = nextLayout.some(it => (it.y + it.h) > MAX_ALLOWED_ROWS);
+
+      if (hasOutOfBounds) {
+        const updatedLayout = nextLayout.map((nextItem) => {
+          const currentItem = grid.find(g => g.i === nextItem.i);
+          
+          if (currentItem && nextItem.h > currentItem.h) {
+            const spaceRemaining = MAX_ALLOWED_ROWS - nextItem.y;
+            const clampedH = Math.max(currentItem.h, spaceRemaining);
+            
+            return { ...nextItem, h: clampedH };
+          }
+          return nextItem;
+        });
+
+        const hasOverlap = updatedLayout.some((itemA, indexA) => 
+          updatedLayout.some((itemB, indexB) => {
+            if (indexA === indexB) return false;
+            const horizontalOverlap = itemA.x < itemB.x + itemB.w && itemA.x + itemA.w > itemB.x;
+            const verticalOverlap = itemA.y < itemB.y + itemB.h && itemA.y + itemA.h > itemB.y;
+            return horizontalOverlap && verticalOverlap;
+          })
+        );
+
+        const isStillInvalid = updatedLayout.some(it => (it.y + it.h) > MAX_ALLOWED_ROWS);
+        
+        if (hasOverlap || isStillInvalid) {
+          setGrid([...grid]); 
+        } else {
+          setGrid(updatedLayout);
+        }
+      } else {
+        setGrid(nextLayout);
+      }
+    },
+    gridConfig: {
+      ...GRID_CONFIG,
+      maxRows: 14,
+      margin:[10, 10],
+      containerPadding: [16,16], 
+    },
     isResizable: true,
     accept: (s) => s.type === "tray-card",
+    compactor: noCompactor, // 2. Attached the compactor to the hook
   });
 
   const placeholder = useGridPlaceholder(group);
 
   return (
-    <div 
-      style={{ 
-        display: "flex",
-        gap: GAP,
-        alignItems: "stretch",
-        width: "100%",
-        padding: "16px",
-        boxSizing: "border-box"
-      }}
-    >
+    <div style={{ width: "100%" }}>
       <div
         ref={containerRef}
         style={{ 
           flex: "1 1 0%", 
-          width: "100%",
           position: "relative", 
-          minHeight: 620,
-          boxSizing: "border-box"
         }}
         className="snapgrid-measure-shell"
       >
-        <div className="snapgrid-surface snapgrid-surface--cool" style={{ height: "100%" }}>
+        <div className="snapgrid-surface snapgrid-surface--cool">
           <div 
             {...containerProps} 
             className="snapgrid-grid-layer"
             style={{ 
               ...containerProps.style,
-              padding: "8px", // Helps allow crosshair selections on outer edge grids
-              boxSizing: "border-box"
             }}
           >
             {grid.map((it) => (
@@ -156,7 +149,6 @@ function Body({
   );
 }
 
-// A standard grid item component
 function GridTile({ id, group }: { id: string; group: string }) {
   const { ref, style } = useGridItem({ id, group });
 
