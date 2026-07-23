@@ -20,5 +20,5 @@ export function tMarket(key: string, fallback?: string): string {
 export function formatMarketItemLabel(nameKey: string, fallbackName: string, categoryKey?: string): string {
   const name = tMarket(nameKey, fallbackName);
   const category = categoryKey ? tMarket(categoryKey) : '';
-  return category ? `${name} · ${category}` : name;
+  return category ? `${name}` : name;
 }

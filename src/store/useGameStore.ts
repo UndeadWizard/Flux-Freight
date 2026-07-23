@@ -3,15 +3,17 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 export type WidgetType = 'ledger' | 'vault' | 'logs' | 'map';
+export type LithoClockSpeed = '1x' | '2x' | '4x';
 
 interface GameState {
   gameTick: number;
   isPaused: boolean;
+  tickSpeed: LithoClockSpeed; 
   commandHistory: string[];
-  // Central assignments grid tracking matrix dictionary
   assignments: Record<string, WidgetType | null>;
   advanceTick: () => void;
   togglePause: () => void;
+  setTickSpeed: (speed: LithoClockSpeed) => void;
   mountWidgetInFirstOpenSlot: (type: WidgetType) => void;
   unmountWidgetFromSlot: (slotId: string) => void;
   swapWidgetSlots: (sourceSlotId: string, targetSlotId: string, widgetId: WidgetType) => void;
@@ -31,8 +33,9 @@ export const useGameStore = create<GameState>()(
     (set) => ({
       gameTick: 0,
       isPaused: false,
+      tickSpeed: '1x',
       assignments: SEED_ASSIGNMENTS,
-      commandHistory: ['APEX v1.35 Symmetrical Insertion Engine Online.'],
+      commandHistory: ['APEX v1.40 Lithomancy Harmonic Chronology Engine Online.'],
 
       togglePause: () => set((state) => ({ isPaused: !state.isPaused })),
 
@@ -41,12 +44,15 @@ export const useGameStore = create<GameState>()(
         return { gameTick: state.gameTick + 1 };
       }),
 
+      setTickSpeed: (speed) => set((state) => ({
+        tickSpeed: speed,
+        commandHistory: [`[SYS_CLOCK] Resonance multiplier set to: [${speed.toUpperCase()}]`, ...state.commandHistory]
+      })),
+
       mountWidgetInFirstOpenSlot: (type) => set((state) => {
-        // Prevent opening duplicates anywhere across active cells
         const isAlreadyMounted = Object.values(state.assignments).includes(type);
         if (isAlreadyMounted) return {};
 
-        // Track down the absolute first slot identifier that contains null
         const firstEmptySlotKey = Object.keys(state.assignments).find(
           (key) => state.assignments[key] === null
         );
@@ -70,8 +76,8 @@ export const useGameStore = create<GameState>()(
         const nextAssignments = { ...state.assignments };
         const displacedWidget = nextAssignments[targetSlotId];
 
-        nextAssignments[sourceSlotId] = displacedWidget; // Drops displaced item or null back into origin
-        nextAssignments[targetSlotId] = widgetId;        // Anchors source item onto new destination target
+        nextAssignments[sourceSlotId] = displacedWidget;
+        nextAssignments[targetSlotId] = widgetId;
         
         return { assignments: nextAssignments };
       })

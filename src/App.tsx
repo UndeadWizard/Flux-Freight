@@ -18,7 +18,6 @@ import {
   verticalCompactor,
 } from '@snapgridjs/react';
 
-// Static layout properties to feed SnapGrid modifiers directly
 const STATIC_GRID_COLS = 20;
 const WORKSPACE_LAYOUT_STORAGE_KEY = 'flux-freight-workspace-layout';
 
@@ -31,9 +30,7 @@ const DEFAULT_TRAY: TileId[] = ['logs', 'map'];
 
 function isLayoutItem(value: unknown): value is Layout[number] {
   if (!value || typeof value !== 'object') return false;
-
   const candidate = value as Record<string, unknown>;
-
   return (
     typeof candidate.i === 'string' &&
     typeof candidate.x === 'number' &&
@@ -48,12 +45,8 @@ function readWorkspaceState(): { grid: Layout; tray: TileId[] } {
   if (typeof window === 'undefined') {
     return { grid: DEFAULT_GRID, tray: DEFAULT_TRAY };
   }
-
   const saved = window.localStorage.getItem(WORKSPACE_LAYOUT_STORAGE_KEY);
-
-  if (!saved) {
-    return { grid: DEFAULT_GRID, tray: DEFAULT_TRAY };
-  }
+  if (!saved) return { grid: DEFAULT_GRID, tray: DEFAULT_TRAY };
 
   try {
     const parsed = JSON.parse(saved) as { grid?: unknown; tray?: unknown };
@@ -81,7 +74,8 @@ function insertBefore(list: TileId[], id: TileId, beforeId: string): TileId[] {
 }
 
 export default function App() {
-  const { isPaused, advanceTick } = useGameStore();
+  // 🚀 EXTRACT CLOCK VALUE METRICS FROM THE CENTRAL STORAGE
+  const { isPaused, advanceTick, tickSpeed } = useGameStore();
   const advanceMarketTick = useMarketStore((state) => state.advanceTick);
 
   const [{ grid: initialGrid, tray: initialTray }] = useState(readWorkspaceState);
@@ -95,24 +89,27 @@ export default function App() {
     );
   }, [grid, tray]);
 
+  // Speed Controls
   useEffect(() => {
+    let clockDelayInterval = 1000;
+    if (tickSpeed === '2x') clockDelayInterval = 500;
+    if (tickSpeed === '4x') clockDelayInterval = 250;
+
     const interval = setInterval(() => {
       if (isPaused) return;
       advanceTick();        
       advanceMarketTick();  
-    }, 3000);
+    }, clockDelayInterval);
+
     return () => clearInterval(interval);
-  }, [advanceTick, advanceMarketTick, isPaused]);
+  }, [advanceTick, advanceMarketTick, isPaused, tickSpeed]);
 
   return (
     <div className="flux-terminal-environment font-mono select-none">
-      
-      {/* Top Chronology Control Bar Header */}
       <Header />
 
-      {/* Symmetrical Left-to-Right layout row configuration */}
       <DragDropProvider
-          onDragEnd={(event) => {
+        onDragEnd={(event) => {
           const { source, target } = event.operation;
           if (!source || !target) return;
 
@@ -122,7 +119,7 @@ export default function App() {
           if (source.type === 'tray-card' && target.type === 'grid') {
             if (!tileId) return;
             setTray((currentTray) => currentTray.filter((item) => item !== tileId));
-            setGrid((currentGrid) => snapMove(currentGrid, event, { defaultItem: { w: 2, h: 2 } }));
+            setGrid((currentGrid) => snapMove(currentGrid, event, { defaultItem: { w: 4, h: 2 } }));
             return;
           }
 

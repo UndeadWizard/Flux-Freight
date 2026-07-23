@@ -13,7 +13,7 @@ import { type ReactNode } from "react";
 import LedgerTable from "./LedgerTable";
 import TickerLogs from "./TickerLogs";
 import VaultView from "./VaultView";
-import TransitMap from "./TransitMap"
+import TransitMap from "./TransitMap";
 import { Lock, Unlock } from "lucide-react";
 
 export const GRID_CONFIG = { cols: 20, rowHeight: 10 };
@@ -76,6 +76,11 @@ function Body({
     layout: grid,
     width,
     onLayoutChange: (nextLayout) => {
+      if (nextLayout.length < grid.length) {
+        setGrid(nextLayout);
+        return;
+      }
+
       const MAX_ALLOWED_ROWS = 100;
       const lockedItems = grid.filter((item) => item.static);
 
@@ -97,7 +102,6 @@ function Body({
       );
 
       if (movedLockedItem || overlapsLockedItem) {
-        setGrid([...grid]);
         return;
       }
       
@@ -128,7 +132,7 @@ function Body({
         const isStillInvalid = updatedLayout.some(it => (it.y + it.h) > MAX_ALLOWED_ROWS);
         
         if (hasOverlap || isStillInvalid) {
-          setGrid([...grid]); 
+          return; // Simply break out here as well
         } else {
           setGrid(updatedLayout);
         }
@@ -136,6 +140,7 @@ function Body({
         setGrid(nextLayout);
       }
     },
+
     gridConfig: {
       ...GRID_CONFIG,
       maxRows: 31,
